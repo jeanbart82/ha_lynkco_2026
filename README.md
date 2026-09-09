@@ -5,7 +5,9 @@ Custom [Home Assistant](https://www.home-assistant.io/) integration for Lynk & C
 
 If you like the integration, make sure to show your love by giving it a ⭐. 
 
-Pull requests are currently turned off (to prevent AI slop). If you have any feature requests or issues, please [create an issue](https://github.com/b12e/ha_lynkco_2025/issues/new/choose) using the template provided. 
+This repository is a personal fork with additional vehicle sensors, diagnostics and
+endpoint-failure handling. If you have any feature requests or issues, please
+[create an issue](https://github.com/jeanbart82/ha_lynkco_2026/issues/new) using the template provided.
 
 ## Supported Models
 
@@ -21,9 +23,9 @@ Other models are currently not available on the EU market, although it is likely
 # Installation
 
 ## HACS (recommended)
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=b12e&repository=ha_lynkco_2025&category=integration)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=jeanbart82&repository=ha_lynkco_2026&category=integration)
 1. Make sure [HACS](https://hacs.xyz) is installed in your Home Assistant installation
-2. Search for "Lynk & Co" and click Download. Follow the on-screen instructions.
+2. In HACS, add `https://github.com/jeanbart82/ha_lynkco_2026` as a **Custom repository** of type **Integration**, then download it.
 3. Restart Home Assistant
 4. Go to Settings → Devices & services → + Add Integration → Lynk & Co
 
@@ -70,6 +72,7 @@ Tokens are automatically refreshed. You should only need to re-authenticate if t
 | Charging status | Current charging state (charging, fully_charged, etc.) | - | All |
 | Charging time remaining | Time until fully charged | min | All |
 | Electric range | Remaining electric range | km | All |
+| Charger type | Detected charging connector/type | - | All |
 
 ### Fuel
 | Entity | Description | Unit | Model Availability |
@@ -85,6 +88,8 @@ Tokens are automatically refreshed. You should only need to re-authenticate if t
 | Entity | Description | Unit | Model Availability |
 |---|---|---|---|
 | Climate status | HVAC state | - | All |
+| Climate started at | Time the current climate session started | - | All |
+| Climate end time | Expected end time of the current climate session | - | All |
 | Front left seat heater | Heater status (active/inactive/disabled) | - | All |
 | Front right seat heater | Heater status | - | All |
 | Interior temperature | Current cabin temperature | °C | All |
@@ -100,27 +105,57 @@ Tokens are automatically refreshed. You should only need to re-authenticate if t
 |---|---|---|---|
 | Address | Last known address | - | All |
 | Central lock | Lock state (locked/unlocked) | - | All |
+| Vehicle status | Current vehicle status; metadata is exposed as attributes | - | All |
+| Engine status | Current engine status | - | All |
+| Charging start stop status | Charging start/stop state reported by the vehicle | - | All |
+| Location status | Location permission/reporting status | - | All |
 | Last updated | Timestamp of last API data fetch | - | All (disabled by default) |
 | Last updated (climate) | Timestamp of last climate state update from vehicle | - | All (disabled by default) |
 | Last updated (fuel) | Timestamp of last fuel state update from vehicle | - | 01 / 08 (disabled by default) |
 | Last updated (location) | Timestamp of last location update from vehicle | - | All (disabled by default) |
+| Last updated (charging) | Last charging state update from vehicle | - | All (disabled by default) |
 | Odometer | Total distance driven | km | All |
+| API status | `ok` when all requests succeed, otherwise `degraded` | - | All (diagnostic) |
+| Failed endpoints | Comma-separated list of API endpoints that failed | - | All (diagnostic) |
+| Last successful update | Timestamp of the latest successful data snapshot | - | All (diagnostic) |
+
+The **Vehicle status** sensor exposes additional vehicle metadata as attributes
+when provided by the API, including model year, propulsion type and fuel type.
+Metadata availability depends on the vehicle and the API response.
 
 ### Binary Sensors
-| Entity | Device class | Model Availability
-|---|---|--|
-| Front left door | door | All
-| Front right door | door | All
-| Rear left door | door | All
-| Rear right door | door | All
-| Front left window | window | All
-| Front right window | window | All
-| Rear left window | window | All
-| Rear right window | window | All
-| Sunroof | window | 01 / 08
-| Hood | door | All
-| Trunk | door | All
-| Car running | running | All
+| Entity | Device class | Model Availability |
+|---|---|---|
+| Front left door | door | All |
+| Front right door | door | All |
+| Rear left door | door | All |
+| Rear right door | door | All |
+| Front left window | window | All |
+| Front right window | window | All |
+| Rear left window | window | All |
+| Rear right window | window | All |
+| Sunroof | window | 01 / 08 |
+| Hood | door | All |
+| Trunk | door | All |
+| Tank flap | door | PHEV |
+| Charge lid | door | BEV/PHEV when reported by the API |
+| Doors and windows closed | door | All |
+| Car running | running | All |
+| Telematics enabled | - | All |
+| Location data enabled | - | All |
+| Location sharing enabled | - | All |
+| Honking permitted | - | All |
+| Flashing permitted | - | All |
+| Charging data accurate | - | All |
+| Climate target configurable | - | All |
+| Climate usage limited | - | All |
+| Engine started for low battery | - | PHEV |
+| Engine started when climate active | - | PHEV |
+
+Some binary sensors intentionally show `unknown` when the vehicle or API does
+not provide the corresponding field. For example, a charge lid can be unknown
+even when the tank flap correctly reports `closed`; unknown is not interpreted
+as closed.
 
 ### Device Tracker
 - GPS location with coordinates
@@ -138,6 +173,12 @@ Tokens are automatically refreshed. You should only need to re-authenticate if t
 ### Button
 - Refresh data - force an immediate refresh of all sensors from the device page
 - Update location - ask the car to report its current GPS location
+
+### Device information and availability
+- Vehicle metadata is shared through the Home Assistant device information, including the model year and propulsion type when available.
+- API endpoints are refreshed independently. If one endpoint fails, the last known values from the other endpoints remain available.
+- Entities that depend on a failed endpoint become unavailable until that endpoint succeeds again.
+- The diagnostic sensors expose the current API health and failed endpoint names.
 </details>
 
 ## Actions (Services)
