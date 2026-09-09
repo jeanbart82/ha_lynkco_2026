@@ -1,7 +1,7 @@
 # Lynk & Co Home Assistant Integration
 ![Usage counter](https://img.shields.io/badge/dynamic/json?color=41BDF5&logo=home-assistant&label=integration%20usage&suffix=%20installs&cacheSeconds=15600&url=https://raw.githubusercontent.com/b12e/ha-lynkco-usage-stats/refs/heads/main/usage.json&query=$.total_usage) 
 
-Custom [Home Assistant](https://www.home-assistant.io/) integration for Lynk & Co vehicles (>MY25 01, 02 and 08) via [HACS](https://hacs.xyz/).
+Custom [Home Assistant](https://www.home-assistant.io/) integration for Lynk & Co vehicles (01, >MY25 01, 02 and 08) via [HACS](https://hacs.xyz/).
 
 If you like the integration, make sure to show your love by giving it a ⭐. 
 
@@ -12,10 +12,10 @@ endpoint-failure handling. If you have any feature requests or issues, please
 ## Supported Models
 
 Tested on the following vehicles:
+- Pre-2025 Lynk & Co 01
 - 2025 (New/Facelift) Lynk & Co 01 (PHEV) and newer
 - Lynk & Co 02 (BEV)
 - Lynk & Co 08 (PHEV)
-- Pre-2025 Lynk & Co 01 (partial support; community verified)
 
 Additional community testing shows that the integration can also work partially
 with pre-2025 Lynk & Co 01 models. See the [pre-2025 Lynk & Co 01 results](https://github.com/b12e/ha_lynkco_2025/issues/33).
