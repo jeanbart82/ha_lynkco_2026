@@ -16,9 +16,17 @@ Tested on the following vehicles:
 - Lynk & Co 02 (BEV)
 - Lynk & Co 08 (PHEV)
 
-Other models are currently not available on the EU market, although it is likely when they do become available they are on the same platform and will work. The documentation will be updated accordingly as soon as this happens.
+Additional community testing shows that the integration can also work partially
+with a pre-2025 Lynk & Co 01. See the [2023 Lynk & Co 01 test results](https://github.com/b12e/ha_lynkco_2025/issues/33).
 
-> **Note**: Pre-2025 Lynk & Co 01 models use a different platform and are NOT supported. You can try your luck with [this](https://github.com/Donkie/Hass-Lynk-Co) repo.
+Other models are currently not available on the EU market, although it is likely
+when they do become available they are on the same platform and will work. The
+documentation will be updated accordingly as soon as this happens.
+
+> **Compatibility note**: Pre-2025 Lynk & Co 01 models use a different platform
+> and are not officially supported. However, a 2023 Lynk & Co 01 was tested with
+> this integration and several actions worked. Results may vary by vehicle,
+> software version and API state. You can also try [this](https://github.com/Donkie/Hass-Lynk-Co) repo.
 
 # Installation
 
@@ -180,6 +188,42 @@ as closed.
 - Entities that depend on a failed endpoint become unavailable until that endpoint succeeds again.
 - The diagnostic sensors expose the current API health and failed endpoint names.
 </details>
+
+## Compatibility test: 2023 Lynk & Co 01
+
+The integration was tested on a **2023 Lynk & Co 01** using Home Assistant
+2026.9 and integration version `v0.6.1`. The test was performed on
+8 September 2026. The complete report is available in
+[b12e/ha_lynkco_2025#33](https://github.com/b12e/ha_lynkco_2025/issues/33).
+
+### Tested actions
+
+| Action | Result | Notes |
+|---|---|---|
+| `lynkco.refresh` | ❌ Not confirmed | No visible effect during the test |
+| `lynkco.request_location` | ❌ Not confirmed | The car was away during the test |
+| `lynkco.lock_door` | ✅ Works |  |
+| `lynkco.unlock_door` | ✅ Works |  |
+| `lynkco.flash_lights` | ✅ Works |  |
+| `lynkco.honk_horn` | ✅ Works |  |
+| `lynkco.open_sunroof` | ❌ Not confirmed |  |
+| `lynkco.close_sunroof` | ❌ Not confirmed |  |
+| `lynkco.set_charge_limit` | ❌ No effect observed |  |
+| `lynkco.start_charging` | ❌ Not tested | Charging was controlled separately with a one-phase charger |
+| `lynkco.stop_charging` | ❌ No response observed | Tested while charging |
+| `lynkco.start_conditioning` | ✅ Works | Response was somewhat slow and used the last temperature set in the car |
+| `lynkco.stop_conditioning` | ✅ Works | Response was somewhat slow |
+| `lynkco.start_ventilate` | ❌ Not tested |  |
+| `lynkco.stop_ventilate` | ❌ Not tested |  |
+| `lynkco.start_heaters` | ❌ No effect observed | Separate heater action did not appear necessary for conditioning |
+| `lynkco.stop_heaters` | ❌ Not confirmed |  |
+| `lynkco.lock_glovebox` | ❌ Not confirmed |  |
+| `lynkco.unlock_glovebox` | ❌ Not confirmed |  |
+
+The test also showed that entities did not all update consistently: some
+appeared to update approximately every 15 minutes while others did not update
+during the test. This is a preliminary result and should not be interpreted as
+full support for all pre-2025 vehicles.
 
 ## Actions (Services)
 <details>
