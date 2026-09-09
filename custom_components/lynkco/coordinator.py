@@ -14,7 +14,16 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import LynkCoAPI
-from .const import CLIMATE_SCAN_INTERVAL, CONF_DRIVING_INTERVAL, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DRIVING_SCAN_INTERVAL, DOMAIN
+from .const import (
+    CLIMATE_SCAN_INTERVAL,
+    CONF_DRIVING_INTERVAL,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DRIVING_SCAN_INTERVAL,
+    DOMAIN,
+    MANUFACTURER,
+    MODEL_NAMES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,37 +55,59 @@ class LynkCoCoordinator(DataUpdateCoordinator):
         self.propulsion: str | None = None  # Set after first fetch (e.g. "PHEV", "BEV")
         self.entry = entry
         self._last_fast_poll: dict[str, datetime] = {}
+        self.endpoint_errors: dict[str, str] = {}
 
-    async def _async_fetch_all(self) -> dict:
-        vehicle_data = await self.api.get_vehicle_data(self.vin)
-        location = await self.api.get_location(self.vin)
-        charge = await self.api.get_charge_state(self.vin)
-        climate = await self.api.get_climate_state(self.vin)
-        doors = await self.api.get_doors_windows(self.vin)
-        fuel = await self.api.get_fuel_state(self.vin) if self.propulsion != "BEV" else {}
-        metadata = await self.api.get_vehicle_metadata(self.vin)
+    @property
+    def device_info(self) -> dict[str, object]:
+        """Return shared device metadata for every Lynk & Co entity."""
+        vehicle = (self.data or {}).get("metadata", {}).get("vehicle") or {}
         return {
-            "vehicle_data": vehicle_data,
-            "location": location,
-            "charge": charge,
-            "climate": climate,
-            "doors": doors,
-            "fuel": fuel,
-            "metadata": metadata,
-            "last_updated": dt_util.now(),
+            "identifiers": {(DOMAIN, self.vin)},
+            "name": MODEL_NAMES.get(self.model, f"Lynk & Co {self.model}"),
+            "manufacturer": MANUFACTURER,
+            "model": MODEL_NAMES.get(self.model, self.model),
+            "serial_number": self.vin,
+            "sw_version": vehicle.get("year"),
+            "hw_version": vehicle.get("propulsionType"),
         }
 
+    async def _async_fetch_all(self) -> dict:
+        endpoints: dict[str, Callable[[], Coroutine[Any, Any, dict]]] = {
+            "vehicle_data": lambda: self.api.get_vehicle_data(self.vin),
+            "location": lambda: self.api.get_location(self.vin),
+            "charge": lambda: self.api.get_charge_state(self.vin),
+            "climate": lambda: self.api.get_climate_state(self.vin),
+            "doors": lambda: self.api.get_doors_windows(self.vin),
+            "metadata": lambda: self.api.get_vehicle_metadata(self.vin),
+        }
+        if self.propulsion != "BEV":
+            endpoints["fuel"] = lambda: self.api.get_fuel_state(self.vin)
+
+        old_data = self.data or {}
+        # Keep requests sequential: the API client may refresh the shared token
+        # after a 401, and concurrent refreshes could overwrite each other.
+        results = [
+            await self._fetch_endpoint(key, fetch_fn)
+            for key, fetch_fn in endpoints.items()
+        ]
+        data = {key: value for key, value in results if value is not None}
+        if not data and not old_data:
+            raise UpdateFailed("All Lynk & Co API endpoints failed")
+
+        # Keep the last known value for an endpoint that failed. Entities tied
+        # to that endpoint are marked unavailable through endpoint_errors.
+        snapshot = {
+            key: data.get(key, old_data.get(key, {}))
+            for key in ("vehicle_data", "location", "charge", "climate", "doors", "fuel", "metadata")
+        }
+        snapshot["last_updated"] = (
+            dt_util.now() if data else old_data.get("last_updated")
+        )
+        snapshot["_endpoint_errors"] = dict(self.endpoint_errors)
+        return snapshot
+
     async def _async_update_data(self) -> dict:
-        try:
-            data = await self._async_fetch_all()
-        except Exception as err:
-            if await self.api.refresh_tokens():
-                try:
-                    data = await self._async_fetch_all()
-                except Exception as retry_err:
-                    raise UpdateFailed(f"API error after refresh: {retry_err}") from retry_err
-            else:
-                raise UpdateFailed(f"API error: {err}") from err
+        data = await self._async_fetch_all()
 
         # Store propulsion type for entity filtering
         propulsion = (data["metadata"].get("vehicle") or {}).get("propulsionType")
@@ -84,6 +115,19 @@ class LynkCoCoordinator(DataUpdateCoordinator):
             self.propulsion = propulsion
 
         return data
+
+    async def _fetch_endpoint(
+        self, key: str, fetch_fn: Callable[[], Coroutine[Any, Any, dict]]
+    ) -> tuple[str, dict | None]:
+        """Fetch one endpoint without taking unrelated entities offline."""
+        try:
+            value = await fetch_fn()
+        except Exception as err:
+            self.endpoint_errors[key] = str(err)
+            _LOGGER.warning("Lynk & Co endpoint %s failed: %s", key, err)
+            return key, None
+        self.endpoint_errors.pop(key, None)
+        return key, value
 
     def start_fast_poll(self) -> Callable[[], None]:
         """Start the endpoint-specific fast-poll timer; returns an unsub callable.
@@ -127,18 +171,32 @@ class LynkCoCoordinator(DataUpdateCoordinator):
 
         was_driving = (self.data.get("vehicle_data") or {}).get("driveModeEnabled", False)
         updates: dict[str, Any] = {}
+        errors_before = dict(self.endpoint_errors)
         for key, fn_name in due.items():
             try:
                 updates[key] = await getattr(self.api, fn_name)(self.vin)
                 self._last_fast_poll[key] = now
-            except Exception:
-                _LOGGER.debug("Fast poll of %s failed", key)
+                self.endpoint_errors.pop(key, None)
+            except Exception as err:
+                self.endpoint_errors[key] = str(err)
+                _LOGGER.warning("Fast poll of Lynk & Co endpoint %s failed: %s", key, err)
         if not updates:
+            if self.endpoint_errors != errors_before:
+                self.data = {
+                    **self.data,
+                    "_endpoint_errors": dict(self.endpoint_errors),
+                }
+                self.async_update_listeners()
             return
 
         changed = any(updates[k] != self.data.get(k) for k in updates)
-        self.data = {**self.data, **updates, "last_updated": dt_util.now()}
-        if changed:
+        self.data = {
+            **self.data,
+            **updates,
+            "last_updated": dt_util.now(),
+            "_endpoint_errors": dict(self.endpoint_errors),
+        }
+        if changed or updates:
             self.async_update_listeners()
         _LOGGER.debug("Fast-polled %s for %s (changed=%s)", list(updates), self.vin, changed)
 
@@ -163,16 +221,38 @@ class LynkCoCoordinator(DataUpdateCoordinator):
 
         for delay in REFRESH_RETRY_DELAYS:
             await asyncio.sleep(delay)
+            had_error = data_key in self.endpoint_errors
             try:
                 new_value = await fetch_fn()
-            except Exception:
+            except Exception as err:
+                self.endpoint_errors[data_key] = str(err)
                 _LOGGER.debug("Targeted refresh of %s failed, will retry", data_key)
                 continue
+            self.endpoint_errors.pop(data_key, None)
 
             if new_value != old_value:
-                self.data = {**self.data, data_key: new_value, "last_updated": dt_util.now()}
+                self.data = {
+                    **self.data,
+                    data_key: new_value,
+                    "last_updated": dt_util.now(),
+                    "_endpoint_errors": dict(self.endpoint_errors),
+                }
                 self.async_update_listeners()
                 _LOGGER.debug("Targeted refresh of %s detected change", data_key)
                 return
+            if had_error:
+                self.data = {
+                    **self.data,
+                    "last_updated": dt_util.now(),
+                    "_endpoint_errors": dict(self.endpoint_errors),
+                }
+                self.async_update_listeners()
+                return
 
         _LOGGER.debug("Targeted refresh of %s: no change after %d retries", data_key, len(REFRESH_RETRY_DELAYS))
+        if self.endpoint_errors.get(data_key) is not None:
+            self.data = {
+                **self.data,
+                "_endpoint_errors": dict(self.endpoint_errors),
+            }
+            self.async_update_listeners()

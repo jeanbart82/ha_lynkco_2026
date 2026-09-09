@@ -8,7 +8,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, MANUFACTURER, MODEL_NAMES
+from .const import DOMAIN
 from .coordinator import LynkCoCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,13 +43,7 @@ class LynkCoButton(ButtonEntity):
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.vin)},
-            "name": MODEL_NAMES.get(self.coordinator.model, f"Lynk & Co {self.coordinator.model}"),
-            "manufacturer": MANUFACTURER,
-            "model": MODEL_NAMES.get(self.coordinator.model, self.coordinator.model),
-            "serial_number": self.coordinator.vin,
-        }
+        return self.coordinator.device_info
 
 
 class LynkCoRefreshButton(LynkCoButton):

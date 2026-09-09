@@ -24,10 +24,23 @@ BINARY_SENSOR_TYPES: list[dict] = [
     {"key": "sunroof", "name": "Sunroof", "field": "sunroofStatus", "device_class": BinarySensorDeviceClass.WINDOW, "exclude_models": ["E335"]},
     {"key": "hood", "name": "Hood", "field": "hoodStatus", "device_class": BinarySensorDeviceClass.DOOR},
     {"key": "trunk", "name": "Trunk", "field": "trunkStatus", "device_class": BinarySensorDeviceClass.DOOR},
+    {"key": "tank_flap", "name": "Tank flap", "field": "tankFlapStatus", "device_class": BinarySensorDeviceClass.DOOR},
+    {"key": "charge_lid", "name": "Charge lid", "field": "chargeLidStatus", "device_class": BinarySensorDeviceClass.DOOR},
+    {"key": "doors_windows_closed", "name": "Doors and windows closed", "field": "generalStatus", "device_class": BinarySensorDeviceClass.DOOR},
 ]
 
 VEHICLE_DATA_BINARY_SENSORS: list[dict] = [
     {"key": "car_running", "name": "Car running", "field": "driveModeEnabled", "device_class": BinarySensorDeviceClass.RUNNING, "icon": "mdi:car"},
+    {"key": "telematics_enabled", "name": "Telematics enabled", "field": "vehicleTelematicsEnabled", "device_class": None, "icon": "mdi:access-point"},
+    {"key": "location_data_enabled", "name": "Location data enabled", "field": "vehicleLocationDataEnabled", "device_class": None, "icon": "mdi:map-marker-check"},
+    {"key": "location_sharing_enabled", "name": "Location sharing enabled", "field": "vehicleAutoShareLocationDataEnabled", "device_class": None, "icon": "mdi:map-marker-account"},
+    {"key": "honking_permitted", "name": "Honking permitted", "field": "honkingPermitted", "device_class": None, "icon": "mdi:bullhorn"},
+    {"key": "flashing_permitted", "name": "Flashing permitted", "field": "flashingPermitted", "device_class": None, "icon": "mdi:car-light-high"},
+    {"key": "charging_data_accurate", "name": "Charging data accurate", "field": "isChargingDataAccurate", "device_class": None, "icon": "mdi:check-network", "data_key": "charge"},
+    {"key": "climate_target_configurable", "name": "Climate target configurable", "field": "isTargetTemperatureConfigurable", "device_class": None, "icon": "mdi:thermometer-cog", "data_key": "climate"},
+    {"key": "climate_usage_limited", "name": "Climate usage limited", "field": "isUsageLimited", "device_class": None, "icon": "mdi:timer-alert", "data_key": "climate"},
+    {"key": "engine_started_low_battery", "name": "Engine started for low battery", "field": "engineStartingForLowBattery", "device_class": None, "icon": "mdi:battery-alert", "data_key": "climate"},
+    {"key": "engine_started_when_active", "name": "Engine started when climate active", "field": "isEngineStartedWhenActive", "device_class": None, "icon": "mdi:engine", "data_key": "climate"},
 ]
 
 
@@ -58,13 +71,7 @@ class LynkCoBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.vin)},
-            "name": MODEL_NAMES.get(self.coordinator.model, f"Lynk & Co {self.coordinator.model}"),
-            "manufacturer": MANUFACTURER,
-            "model": MODEL_NAMES.get(self.coordinator.model, self.coordinator.model),
-            "serial_number": self.coordinator.vin,
-        }
+        return self.coordinator.device_info
 
     @property
     def is_on(self) -> bool | None:
@@ -75,6 +82,10 @@ class LynkCoBinarySensor(CoordinatorEntity, BinarySensorEntity):
         if value is None:
             return None
         return value != "CLOSED"
+
+    @property
+    def available(self) -> bool:
+        return super().available and not self.coordinator.endpoint_errors.get("doors")
 
 
 class LynkCoVehicleDataBinarySensor(CoordinatorEntity, BinarySensorEntity):
@@ -91,16 +102,17 @@ class LynkCoVehicleDataBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.vin)},
-            "name": MODEL_NAMES.get(self.coordinator.model, f"Lynk & Co {self.coordinator.model}"),
-            "manufacturer": MANUFACTURER,
-            "model": MODEL_NAMES.get(self.coordinator.model, self.coordinator.model),
-            "serial_number": self.coordinator.vin,
-        }
+        return self.coordinator.device_info
 
     @property
     def is_on(self) -> bool | None:
         if self.coordinator.data is None:
             return None
-        return self.coordinator.data.get("vehicle_data", {}).get(self._sensor_type["field"])
+        data_key = self._sensor_type.get("data_key", "vehicle_data")
+        return self.coordinator.data.get(data_key, {}).get(self._sensor_type["field"])
+
+    @property
+    def available(self) -> bool:
+        return super().available and not self.coordinator.endpoint_errors.get(
+            self._sensor_type.get("data_key", "vehicle_data")
+        )

@@ -76,6 +76,9 @@
       "last_updated_fuel": { "name": "Zuletzt aktualisiert (Kraftstoff)" },
       "last_updated_location": { "name": "Zuletzt aktualisiert (Standort)" },
       "last_updated_climate": { "name": "Zuletzt aktualisiert (Klima)" }
+      ,"api_status": { "name": "API-Status" }
+      ,"failed_endpoints": { "name": "Fehlgeschlagene Endpunkte" }
+      ,"last_successful_update": { "name": "Letzte erfolgreiche Aktualisierung" }
     },
     "binary_sensor": {
       "door_front_left": { "name": "Tür vorne links" },
@@ -89,6 +92,8 @@
       "sunroof": { "name": "Schiebedach" },
       "hood": { "name": "Motorhaube" },
       "trunk": { "name": "Kofferraum" },
+      "tank_flap": { "name": "Tankklappe" },
+      "charge_lid": { "name": "Ladeklappe" },
       "car_running": { "name": "Auto aktiv" }
     },
     "lock": {

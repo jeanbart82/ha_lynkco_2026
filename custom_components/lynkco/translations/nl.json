@@ -76,6 +76,17 @@
       "last_updated_fuel": { "name": "Laatst bijgewerkt (brandstof)" },
       "last_updated_location": { "name": "Laatst bijgewerkt (locatie)" },
       "last_updated_climate": { "name": "Laatst bijgewerkt (klimaat)" }
+      ,"vehicle_status": { "name": "Voertuigstatus" }
+      ,"engine_status": { "name": "Motorstatus" }
+      ,"charging_start_stop_status": { "name": "Start-/stopstatus laden" }
+      ,"charger_type": { "name": "Ladertype" }
+      ,"climate_started_at": { "name": "Klimaat gestart op" }
+      ,"climate_end_time": { "name": "Klimaat eindigt op" }
+      ,"charge_updated_at": { "name": "Laatst bijgewerkt (laden)" }
+      ,"location_status": { "name": "Locatiestatus" }
+      ,"api_status": { "name": "API-status" }
+      ,"failed_endpoints": { "name": "Mislukte endpoints" }
+      ,"last_successful_update": { "name": "Laatste succesvolle update" }
     },
     "binary_sensor": {
       "door_front_left": { "name": "Deur linksvoor" },
@@ -89,7 +100,20 @@
       "sunroof": { "name": "Schuifdak" },
       "hood": { "name": "Motorkap" },
       "trunk": { "name": "Kofferbak" },
+      "tank_flap": { "name": "Tankklep" },
+      "charge_lid": { "name": "Laadklep" },
+      "doors_windows_closed": { "name": "Deuren en ramen gesloten" },
       "car_running": { "name": "Auto actief" }
+      ,"telematics_enabled": { "name": "Telematica ingeschakeld" }
+      ,"location_data_enabled": { "name": "Locatiegegevens ingeschakeld" }
+      ,"location_sharing_enabled": { "name": "Locatie delen ingeschakeld" }
+      ,"honking_permitted": { "name": "Claxon toegestaan" }
+      ,"flashing_permitted": { "name": "Lichtsignaal toegestaan" }
+      ,"charging_data_accurate": { "name": "Laadgegevens betrouwbaar" }
+      ,"climate_target_configurable": { "name": "Doeltemperatuur instelbaar" }
+      ,"climate_usage_limited": { "name": "Klimaatgebruik beperkt" }
+      ,"engine_started_low_battery": { "name": "Motor gestart voor lage batterij" }
+      ,"engine_started_when_active": { "name": "Motor gestart tijdens klimaatregeling" }
     },
     "lock": {
       "door_lock": { "name": "Deurslot" },

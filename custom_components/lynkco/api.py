@@ -24,6 +24,21 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+_SENSITIVE_KEY_PARTS = (
+    "token",
+    "authorization",
+    "password",
+    "secret",
+    "vin",
+    "email",
+    "address",
+    "latitude",
+    "longitude",
+    "coordinate",
+    "customer",
+    "snowflake",
+    "device",
+)
 
 
 def _compute_signature(secret: str, nonce: str, path: str) -> str:
@@ -44,6 +59,17 @@ def _decode_jwt_claims(token: str) -> dict:
     payload = token.split(".")[1]
     payload += "=" * (4 - len(payload) % 4)
     return json.loads(base64.urlsafe_b64decode(payload))
+
+
+def _redact_response(value: object, key: str = "") -> object:
+    """Redact sensitive API values before writing a debug log."""
+    if any(part in key.lower() for part in _SENSITIVE_KEY_PARTS):
+        return "<redacted>"
+    if isinstance(value, dict):
+        return {name: _redact_response(item, name) for name, item in value.items()}
+    if isinstance(value, list):
+        return [_redact_response(item, key) for item in value]
+    return value
 
 
 class LynkCoAPI:
@@ -133,11 +159,21 @@ class LynkCoAPI:
                     ) as retry:
                         retry.raise_for_status()
                         retry_data = await retry.json()
+                        _LOGGER.debug(
+                            "API response %s: %s",
+                            _extract_path(url),
+                            _redact_response(retry_data),
+                        )
                         return retry_data if retry_data is not None else {}
             resp.raise_for_status()
             if resp.content_length == 0:
                 return {}
             data = await resp.json()
+            _LOGGER.debug(
+                "API response %s: %s",
+                _extract_path(url),
+                _redact_response(data),
+            )
             return data if data is not None else {}
 
     async def refresh_tokens(self) -> bool:

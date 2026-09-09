@@ -110,6 +110,44 @@ SENSOR_TYPES: list[dict] = [
         "value_fn": lambda d: _lower(_dig(d, "climate", "status")),
     },
     {
+        "key": "vehicle_status",
+        "name": "Vehicle status",
+        "icon": "mdi:car-info",
+        "device_class": SensorDeviceClass.ENUM,
+        "unit": None,
+        "state_class": None,
+        "value_fn": lambda d: _lower(_dig(d, "vehicle_data", "status")),
+    },
+    {
+        "key": "engine_status",
+        "name": "Engine status",
+        "icon": "mdi:engine",
+        "device_class": SensorDeviceClass.ENUM,
+        "unit": None,
+        "state_class": None,
+        "value_fn": lambda d: _lower(_dig(d, "vehicle_data", "engineStatus")),
+    },
+    {
+        "key": "charging_start_stop_status",
+        "name": "Charging start stop status",
+        "icon": "mdi:ev-station",
+        "device_class": SensorDeviceClass.ENUM,
+        "unit": None,
+        "state_class": None,
+        "value_fn": lambda d: _lower(_dig(d, "charge", "startStopStatus")),
+    },
+    {
+        "key": "charger_type",
+        "name": "Charger type",
+        "icon": "mdi:ev-plug-type2",
+        "device_class": SensorDeviceClass.ENUM,
+        "unit": None,
+        "state_class": None,
+        "value_fn": lambda d: _lower(
+            _dig(d, "charge", "chargerType") or _dig(d, "metadata", "batteryInfo", "chargerType")
+        ),
+    },
+    {
         "key": "heater_steering_wheel",
         "name": "Steering wheel heater",
         "icon": "mdi:steering",
@@ -127,6 +165,7 @@ SENSOR_TYPES: list[dict] = [
         "unit": None,
         "state_class": None,
         "value_fn": lambda d: _heater_status(d, "windshield"),
+        "heater_key": "windshield",
     },
     {
         "key": "heater_front_left_seat",
@@ -136,6 +175,7 @@ SENSOR_TYPES: list[dict] = [
         "unit": None,
         "state_class": None,
         "value_fn": lambda d: _heater_status(d, "frontLeftSeat"),
+        "heater_key": "frontLeftSeat",
     },
     {
         "key": "heater_front_right_seat",
@@ -145,6 +185,7 @@ SENSOR_TYPES: list[dict] = [
         "unit": None,
         "state_class": None,
         "value_fn": lambda d: _heater_status(d, "frontRightSeat"),
+        "heater_key": "frontRightSeat",
     },
     {
         "key": "heater_rear_left_seat",
@@ -326,6 +367,75 @@ SENSOR_TYPES: list[dict] = [
         "entity_category": EntityCategory.DIAGNOSTIC,
         "entity_registry_enabled_default": False,
     },
+    {
+        "key": "climate_started_at",
+        "name": "Climate started at",
+        "icon": "mdi:clock-start",
+        "device_class": SensorDeviceClass.TIMESTAMP,
+        "unit": None,
+        "state_class": None,
+        "value_fn": lambda d: _parse_ts(_dig(d, "climate", "startedAt")),
+        "entity_category": EntityCategory.DIAGNOSTIC,
+    },
+    {
+        "key": "climate_end_time",
+        "name": "Climate end time",
+        "icon": "mdi:clock-end",
+        "device_class": SensorDeviceClass.TIMESTAMP,
+        "unit": None,
+        "state_class": None,
+        "value_fn": lambda d: _parse_ts(_dig(d, "climate", "endTime")),
+        "entity_category": EntityCategory.DIAGNOSTIC,
+    },
+    {
+        "key": "charge_updated_at",
+        "name": "Last updated (charging)",
+        "icon": "mdi:clock-outline",
+        "device_class": SensorDeviceClass.TIMESTAMP,
+        "unit": None,
+        "state_class": None,
+        "value_fn": lambda d: _parse_ts(_dig(d, "charge", "updatedAt")),
+        "entity_category": EntityCategory.DIAGNOSTIC,
+    },
+    {
+        "key": "location_status",
+        "name": "Location status",
+        "icon": "mdi:map-marker-alert",
+        "device_class": SensorDeviceClass.ENUM,
+        "unit": None,
+        "state_class": None,
+        "value_fn": lambda d: _lower(_dig(d, "location", "vehicleLocation", "status")),
+    },
+    {
+        "key": "api_status",
+        "name": "API status",
+        "icon": "mdi:api",
+        "device_class": SensorDeviceClass.ENUM,
+        "unit": None,
+        "state_class": None,
+        "value_fn": lambda d: "degraded" if d.get("_endpoint_errors") else "ok",
+        "entity_category": EntityCategory.DIAGNOSTIC,
+    },
+    {
+        "key": "failed_endpoints",
+        "name": "Failed endpoints",
+        "icon": "mdi:api-off",
+        "device_class": None,
+        "unit": None,
+        "state_class": None,
+        "value_fn": lambda d: ", ".join(d.get("_endpoint_errors", {}).keys()) or "none",
+        "entity_category": EntityCategory.DIAGNOSTIC,
+    },
+    {
+        "key": "last_successful_update",
+        "name": "Last successful update",
+        "icon": "mdi:clock-check-outline",
+        "device_class": SensorDeviceClass.TIMESTAMP,
+        "unit": None,
+        "state_class": None,
+        "value_fn": lambda d: d.get("last_updated"),
+        "entity_category": EntityCategory.DIAGNOSTIC,
+    },
 ]
 
 
@@ -387,12 +497,8 @@ async def async_setup_entry(
     entities = []
     for vin, coordinator in data["coordinators"].items():
         is_bev = coordinator.propulsion == "BEV"
-        heaters = _dig(coordinator.data, "climate", "heaters") or {}
         for sensor_type in SENSOR_TYPES:
             if sensor_type.get("fuel_only") and is_bev:
-                continue
-            heater_key = sensor_type.get("heater_key")
-            if heater_key and heaters.get(heater_key) is None:
                 continue
             entities.append(LynkCoSensor(coordinator, sensor_type))
     async_add_entities(entities)
@@ -417,16 +523,60 @@ class LynkCoSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.vin)},
-            "name": MODEL_NAMES.get(self.coordinator.model, f"Lynk & Co {self.coordinator.model}"),
-            "manufacturer": MANUFACTURER,
-            "model": MODEL_NAMES.get(self.coordinator.model, self.coordinator.model),
-            "serial_number": self.coordinator.vin,
-        }
+        return self.coordinator.device_info
 
     @property
     def native_value(self):
         if self.coordinator.data is None:
             return None
         return self._sensor_type["value_fn"](self.coordinator.data)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object] | None:
+        if self.coordinator.data is None:
+            return None
+        if self._sensor_type["key"] == "api_status":
+            return {
+                "failed_endpoints": list(self.coordinator.endpoint_errors),
+                "endpoint_errors": dict(self.coordinator.endpoint_errors),
+            }
+        if self._sensor_type["key"] != "vehicle_status":
+            return None
+        vehicle = _dig(self.coordinator.data, "metadata", "vehicle") or {}
+        return {
+            key: vehicle.get(key)
+            for key in (
+                "year",
+                "propulsionType",
+                "weight",
+                "towingCapacityUnbraked",
+                "towingCapacityBraked",
+                "fuelType",
+            )
+            if vehicle.get(key) is not None
+        }
+
+    @property
+    def available(self) -> bool:
+        endpoint = _sensor_endpoint(self._sensor_type["key"])
+        if endpoint in {"api_status", "failed_endpoints"}:
+            return super().available
+        return super().available and not self.coordinator.endpoint_errors.get(endpoint)
+
+
+def _sensor_endpoint(key: str) -> str:
+    if key.startswith(("battery_", "charging_", "charge_", "power_", "charger_")):
+        return "charge"
+    if key.startswith(("interior_", "target_", "climate_", "heater_")):
+        return "climate"
+    if key.startswith(("fuel_", "tank_", "last_updated_fuel")):
+        return "fuel"
+    if key.startswith(("address", "location_", "last_updated_location")):
+        return "location"
+    if key in {"odometer", "battery_capacity"}:
+        return "metadata"
+    if key in {"vehicle_status", "engine_status", "lock_status"}:
+        return "vehicle_data"
+    if key in {"api_status", "failed_endpoints", "last_successful_update"}:
+        return "api_status"
+    return "metadata"

@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, MODEL_NAMES
+from .const import DOMAIN
 from .coordinator import LynkCoCoordinator
 
 
@@ -31,17 +31,15 @@ class LynkCoDeviceTracker(CoordinatorEntity, TrackerEntity):
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.vin)},
-            "name": MODEL_NAMES.get(self.coordinator.model, f"Lynk & Co {self.coordinator.model}"),
-            "manufacturer": MANUFACTURER,
-            "model": MODEL_NAMES.get(self.coordinator.model, self.coordinator.model),
-            "serial_number": self.coordinator.vin,
-        }
+        return self.coordinator.device_info
 
     @property
     def source_type(self) -> SourceType:
         return SourceType.GPS
+
+    @property
+    def available(self) -> bool:
+        return super().available and not self.coordinator.endpoint_errors.get("location")
 
     def _coordinates(self) -> dict:
         data = self.coordinator.data or {}

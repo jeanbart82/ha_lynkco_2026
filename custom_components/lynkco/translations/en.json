@@ -76,6 +76,17 @@
       "last_updated_fuel": { "name": "Last updated (fuel)" },
       "last_updated_location": { "name": "Last updated (location)" },
       "last_updated_climate": { "name": "Last updated (climate)" }
+      ,"vehicle_status": { "name": "Vehicle status" }
+      ,"engine_status": { "name": "Engine status" }
+      ,"charging_start_stop_status": { "name": "Charging start stop status" }
+      ,"charger_type": { "name": "Charger type" }
+      ,"climate_started_at": { "name": "Climate started at" }
+      ,"climate_end_time": { "name": "Climate end time" }
+      ,"charge_updated_at": { "name": "Last updated (charging)" }
+      ,"location_status": { "name": "Location status" }
+      ,"api_status": { "name": "API status" }
+      ,"failed_endpoints": { "name": "Failed endpoints" }
+      ,"last_successful_update": { "name": "Last successful update" }
     },
     "binary_sensor": {
       "door_front_left": { "name": "Front left door" },
@@ -89,7 +100,20 @@
       "sunroof": { "name": "Sunroof" },
       "hood": { "name": "Hood" },
       "trunk": { "name": "Trunk" },
+      "tank_flap": { "name": "Tank flap" },
+      "charge_lid": { "name": "Charge lid" },
+      "doors_windows_closed": { "name": "Doors and windows closed" },
       "car_running": { "name": "Car running" }
+      ,"telematics_enabled": { "name": "Telematics enabled" }
+      ,"location_data_enabled": { "name": "Location data enabled" }
+      ,"location_sharing_enabled": { "name": "Location sharing enabled" }
+      ,"honking_permitted": { "name": "Honking permitted" }
+      ,"flashing_permitted": { "name": "Flashing permitted" }
+      ,"charging_data_accurate": { "name": "Charging data accurate" }
+      ,"climate_target_configurable": { "name": "Climate target configurable" }
+      ,"climate_usage_limited": { "name": "Climate usage limited" }
+      ,"engine_started_low_battery": { "name": "Engine started for low battery" }
+      ,"engine_started_when_active": { "name": "Engine started when climate active" }
     },
     "lock": {
       "door_lock": { "name": "Door lock" },

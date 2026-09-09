@@ -76,6 +76,9 @@
       "last_updated_fuel": { "name": "Última actualización (combustible)" },
       "last_updated_location": { "name": "Última actualización (ubicación)" },
       "last_updated_climate": { "name": "Última actualización (climatización)" }
+      ,"api_status": { "name": "Estado de API" }
+      ,"failed_endpoints": { "name": "Endpoints fallidos" }
+      ,"last_successful_update": { "name": "Última actualización correcta" }
     },
     "binary_sensor": {
       "door_front_left": { "name": "Puerta delantera izquierda" },
@@ -89,6 +92,8 @@
       "sunroof": { "name": "Techo solar" },
       "hood": { "name": "Capó" },
       "trunk": { "name": "Maletero" },
+      "tank_flap": { "name": "Tapa del depósito" },
+      "charge_lid": { "name": "Tapa de carga" },
       "car_running": { "name": "Coche en marcha" }
     },
     "lock": {

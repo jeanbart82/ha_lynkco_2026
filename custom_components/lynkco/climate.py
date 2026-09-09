@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, MODEL_NAMES
+from .const import DOMAIN
 from .coordinator import LynkCoCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,13 +68,11 @@ class LynkCoClimate(CoordinatorEntity, RestoreEntity, ClimateEntity):
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.vin)},
-            "name": MODEL_NAMES.get(self.coordinator.model, f"Lynk & Co {self.coordinator.model}"),
-            "manufacturer": MANUFACTURER,
-            "model": MODEL_NAMES.get(self.coordinator.model, self.coordinator.model),
-            "serial_number": self.coordinator.vin,
-        }
+        return self.coordinator.device_info
+
+    @property
+    def available(self) -> bool:
+        return super().available and not self.coordinator.endpoint_errors.get("climate")
 
     @property
     def _climate(self) -> dict:
