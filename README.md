@@ -189,42 +189,6 @@ as closed.
 - The diagnostic sensors expose the current API health and failed endpoint names.
 </details>
 
-## Compatibility test: 2023 Lynk & Co 01
-
-The integration was tested on a **2023 Lynk & Co 01** using Home Assistant
-2026.9 and integration version `v0.6.1`. The test was performed on
-8 September 2026. The complete report is available in
-[b12e/ha_lynkco_2025#33](https://github.com/b12e/ha_lynkco_2025/issues/33).
-
-### Tested actions
-
-| Action | Result | Notes |
-|---|---|---|
-| `lynkco.refresh` | ❌ Not confirmed | No visible effect during the test |
-| `lynkco.request_location` | ❌ Not confirmed | The car was away during the test |
-| `lynkco.lock_door` | ✅ Works |  |
-| `lynkco.unlock_door` | ✅ Works |  |
-| `lynkco.flash_lights` | ✅ Works |  |
-| `lynkco.honk_horn` | ✅ Works |  |
-| `lynkco.open_sunroof` | ❌ Not confirmed |  |
-| `lynkco.close_sunroof` | ❌ Not confirmed |  |
-| `lynkco.set_charge_limit` | ❌ No effect observed |  |
-| `lynkco.start_charging` | ❌ Not tested | Charging was controlled separately with a one-phase charger |
-| `lynkco.stop_charging` | ❌ No response observed | Tested while charging |
-| `lynkco.start_conditioning` | ✅ Works | Response was somewhat slow and used the last temperature set in the car |
-| `lynkco.stop_conditioning` | ✅ Works | Response was somewhat slow |
-| `lynkco.start_ventilate` | ❌ Not tested |  |
-| `lynkco.stop_ventilate` | ❌ Not tested |  |
-| `lynkco.start_heaters` | ❌ No effect observed | Separate heater action did not appear necessary for conditioning |
-| `lynkco.stop_heaters` | ❌ Not confirmed |  |
-| `lynkco.lock_glovebox` | ❌ Not confirmed |  |
-| `lynkco.unlock_glovebox` | ❌ Not confirmed |  |
-
-The test also showed that entities did not all update consistently: some
-appeared to update approximately every 15 minutes while others did not update
-during the test. This is a preliminary result and should not be interpreted as
-full support for all pre-2025 vehicles.
-
 ## Actions (Services)
 <details>
 <summary>List of all actions you can perform (e.g. preconditioning)</summary>
@@ -232,33 +196,41 @@ full support for all pre-2025 vehicles.
   
 All actions (except `lynkco.refresh`) accept an optional `vin` parameter. When only one vehicle is configured, the VIN is auto-detected and can be omitted.
 
-| Service | Description | Parameters | 01 (facelift) | 02 | 08 |
-|---|---|---|---|---|---|
-| `lynkco.refresh` | Force-refresh all sensors now | | ✅ | ✅ | ✅ |
-| `lynkco.request_location` | Ask the car to report a fresh position | | ✅ | t.b.c. | t.b.c. |
-| `lynkco.lock_door` | Lock the vehicle's doors | | ✅ | ✅ | ✅ |
-| `lynkco.unlock_door` | Unlock the vehicle's doors | | ✅ | ✅ | ✅ |
-| `lynkco.flash_lights` | Flash the vehicle's lights | | ✅ | ✅ | t.b.c. |
-| `lynkco.honk_horn` | Honk the horn | | t.b.c. | ✅ | t.b.c. |
-| `lynkco.open_sunroof` | Open the sunroof | | ✅ | ❌ | t.b.c.
-| `lynkco.close_sunroof` | Close the sunroof | | ✅ | ❌ | t.b.c.
-| `lynkco.set_charge_limit` | Set charge limit | `percent` (50-100) | ✅ | ✅ | t.b.c.
-| `lynkco.start_charging` | Start charging | | ✅ | ✅ | ✅ |
-| `lynkco.stop_charging` | Stop charging | | ✅ | ✅ | ✅ |
-| `lynkco.start_conditioning` | Start air conditioning | `temp` (16-28) |✅ | ✅ | t.b.c.
-| `lynkco.stop_conditioning` | Stop air conditioning | | ✅ | ✅ | t.b.c
-| `lynkco.start_ventilate` | Open all windows slightly to ventilate | | ✅ |✅| t.b.c.
-| `lynkco.stop_ventilate` | Close ventilation windows | | ✅ | ✅ |  t.b.c.
-| `lynkco.start_heaters` | Start heaters | `heaters` (list) | ✅ |  t.b.c.| t.b.c. |
-| `lynkco.stop_heaters` | Stop heaters | `heaters` (list) | ✅ | t.b.c. | t.b.c. |
-| `lynkco.lock_glovebox` | Lock the glovebox | `pin` (4 digits) | ✅ | t.b.c. | t.b.c. |
-| `lynkco.unlock_glovebox` | Unlock the glovebox | | ✅ | t.b.c. | t.b.c. |
+| Service | Description | Parameters | 01 (facelift) | 02 | 08 | 01 (2023 test) |
+|---|---|---|---|---|---|---|
+| `lynkco.refresh` | Force-refresh all sensors now | | ✅ | ✅ | ✅ | ❌ No visible effect |
+| `lynkco.request_location` | Ask the car to report a fresh position | | ✅ | t.b.c. | t.b.c. | ❌ Not confirmed; car was away |
+| `lynkco.lock_door` | Lock the vehicle's doors | | ✅ | ✅ | ✅ | ✅ |
+| `lynkco.unlock_door` | Unlock the vehicle's doors | | ✅ | ✅ | ✅ | ✅ |
+| `lynkco.flash_lights` | Flash the vehicle's lights | | ✅ | ✅ | t.b.c. | ✅ |
+| `lynkco.honk_horn` | Honk the horn | | t.b.c. | ✅ | t.b.c. | ✅ |
+| `lynkco.open_sunroof` | Open the sunroof | | ✅ | ❌ | t.b.c. | ❌ Not confirmed |
+| `lynkco.close_sunroof` | Close the sunroof | | ✅ | ❌ | t.b.c. | ❌ Not confirmed |
+| `lynkco.set_charge_limit` | Set charge limit | `percent` (50-100) | ✅ | ✅ | t.b.c. | ❌ No effect observed |
+| `lynkco.start_charging` | Start charging | | ✅ | ✅ | ✅ | ⚠️ Not tested |
+| `lynkco.stop_charging` | Stop charging | | ✅ | ✅ | ✅ | ❌ No response observed |
+| `lynkco.start_conditioning` | Start air conditioning | `temp` (16-28) | ✅ | ✅ | t.b.c. | ✅ Slow; used last car temperature |
+| `lynkco.stop_conditioning` | Stop air conditioning | | ✅ | ✅ | t.b.c. | ✅ Slow response |
+| `lynkco.start_ventilate` | Open all windows slightly to ventilate | | ✅ | ✅ | t.b.c. | ⚠️ Not tested |
+| `lynkco.stop_ventilate` | Close ventilation windows | | ✅ | ✅ | t.b.c. | ⚠️ Not tested |
+| `lynkco.start_heaters` | Start heaters | `heaters` (list) | ✅ | t.b.c. | t.b.c. | ❌ No effect observed |
+| `lynkco.stop_heaters` | Stop heaters | `heaters` (list) | ✅ | t.b.c. | t.b.c. | ❌ Not confirmed |
+| `lynkco.lock_glovebox` | Lock the glovebox | `pin` (4 digits) | ✅ | t.b.c. | t.b.c. | ❌ Not confirmed |
+| `lynkco.unlock_glovebox` | Unlock the glovebox | | ✅ | t.b.c. | t.b.c. | ❌ Not confirmed |
+
+The 2023 test used Home Assistant 2026.9 and integration version `v0.6.1`
+on 8 September 2026. See the complete report in
+[b12e/ha_lynkco_2025#33](https://github.com/b12e/ha_lynkco_2025/issues/33).
+Some entities updated approximately every 15 minutes while others did not
+update during the test, so this remains preliminary evidence rather than full
+support for all pre-2025 vehicles.
 
 #### Help needed
 ⚠️ Please open an issue if you have verified a feature works which is marked as t.b.c. in this table so I can update the readme as confirmed working/not working.
 
 #### Notes:
 - ✅ = confirmed working on that model<br />
+- ⚠️ = not tested or not conclusively confirmed on that model<br />
 - Sunroof actions aren't available on the Lynk&Co 02 as it doesn't have a sunroof that can open.<br />
 - A lot of the actions are only available when the doors are locked and the key is not in the vehicle.
 - The gloveblox locking/unlocking appears to be only possible while the vehicle is unlocked (needs confirmation). The Lynk&Co API accepts the action when the vehicle is locked, but the glovebox doesn't appear to be locking/unlocking when it is.
