@@ -15,9 +15,10 @@ Tested on the following vehicles:
 - 2025 (New/Facelift) Lynk & Co 01 (PHEV) and newer
 - Lynk & Co 02 (BEV)
 - Lynk & Co 08 (PHEV)
+- Pre-2025 Lynk & Co 01 (partial support; community verified)
 
 Additional community testing shows that the integration can also work partially
-with a pre-2025 Lynk & Co 01. See the [2023 Lynk & Co 01 test results](https://github.com/b12e/ha_lynkco_2025/issues/33).
+with pre-2025 Lynk & Co 01 models. See the [pre-2025 Lynk & Co 01 results](https://github.com/b12e/ha_lynkco_2025/issues/33).
 
 Other models are currently not available on the EU market, although it is likely
 when they do become available they are on the same platform and will work. The
@@ -196,7 +197,7 @@ as closed.
   
 All actions (except `lynkco.refresh`) accept an optional `vin` parameter. When only one vehicle is configured, the VIN is auto-detected and can be omitted.
 
-| Service | Description | Parameters | 01 (2023 test) | 01 (facelift) | 02 | 08 |
+| Service | Description | Parameters | 01 (pre-2025) | 01 (facelift) | 02 | 08 |
 |---|---|---|---|---|---|---|
 | `lynkco.refresh` | Force-refresh all sensors now | | ❌ No visible effect | ✅ | ✅ | ✅ |
 | `lynkco.request_location` | Ask the car to report a fresh position | | ❌ Not confirmed; car was away | ✅ | t.b.c. | t.b.c. |
@@ -218,7 +219,7 @@ All actions (except `lynkco.refresh`) accept an optional `vin` parameter. When o
 | `lynkco.lock_glovebox` | Lock the glovebox | `pin` (4 digits) | ❌ Not confirmed | ✅ | t.b.c. | t.b.c. |
 | `lynkco.unlock_glovebox` | Unlock the glovebox | | ❌ Not confirmed | ✅ | t.b.c. | t.b.c. |
 
-The 2023 test used Home Assistant 2026.9 and integration version `v0.6.1`
+The pre-2025 compatibility check used Home Assistant 2026.9 and integration version `v0.6.1`
 on 8 September 2026. See the complete report in
 [b12e/ha_lynkco_2025#33](https://github.com/b12e/ha_lynkco_2025/issues/33).
 Some entities updated approximately every 15 minutes while others did not
