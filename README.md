@@ -199,25 +199,25 @@ All actions (except `lynkco.refresh`) accept an optional `vin` parameter. When o
 
 | Service | Description | Parameters | 01 (pre-2025) | 01 (facelift) | 02 | 08 |
 |---|---|---|---|---|---|---|
-| `lynkco.refresh` | Force-refresh all sensors now | | ❌ No visible effect | ✅ | ✅ | ✅ |
-| `lynkco.request_location` | Ask the car to report a fresh position | | ❌ Not confirmed; car was away | ✅ | t.b.c. | t.b.c. |
+| `lynkco.refresh` | Force-refresh all sensors now | | ❌ | ✅ | ✅ | ✅ |
+| `lynkco.request_location` | Ask the car to report a fresh position | | ❌ | ✅ | t.b.c. | t.b.c. |
 | `lynkco.lock_door` | Lock the vehicle's doors | | ✅ | ✅ | ✅ | ✅ |
 | `lynkco.unlock_door` | Unlock the vehicle's doors | | ✅ | ✅ | ✅ | ✅ |
 | `lynkco.flash_lights` | Flash the vehicle's lights | | ✅ | ✅ | ✅ | t.b.c. |
 | `lynkco.honk_horn` | Honk the horn | | ✅ | t.b.c. | ✅ | t.b.c. |
-| `lynkco.open_sunroof` | Open the sunroof | | ❌ Not confirmed | ✅ | ❌ | t.b.c. |
-| `lynkco.close_sunroof` | Close the sunroof | | ❌ Not confirmed | ✅ | ❌ | t.b.c. |
-| `lynkco.set_charge_limit` | Set charge limit | `percent` (50-100) | ❌ No effect observed | ✅ | ✅ | t.b.c. |
-| `lynkco.start_charging` | Start charging | | ⚠️ Not tested | ✅ | ✅ | ✅ |
-| `lynkco.stop_charging` | Stop charging | | ❌ No response observed | ✅ | ✅ | ✅ |
-| `lynkco.start_conditioning` | Start air conditioning | `temp` (16-28) | ✅ Slow; used last car temperature | ✅ | ✅ | t.b.c. |
-| `lynkco.stop_conditioning` | Stop air conditioning | | ✅ Slow response | ✅ | ✅ | t.b.c. |
-| `lynkco.start_ventilate` | Open all windows slightly to ventilate | | ⚠️ Not tested | ✅ | ✅ | t.b.c. |
-| `lynkco.stop_ventilate` | Close ventilation windows | | ⚠️ Not tested | ✅ | ✅ | t.b.c. |
-| `lynkco.start_heaters` | Start heaters | `heaters` (list) | ❌ No effect observed | ✅ | t.b.c. | t.b.c. |
-| `lynkco.stop_heaters` | Stop heaters | `heaters` (list) | ❌ Not confirmed | ✅ | t.b.c. | t.b.c. |
-| `lynkco.lock_glovebox` | Lock the glovebox | `pin` (4 digits) | ❌ Not confirmed | ✅ | t.b.c. | t.b.c. |
-| `lynkco.unlock_glovebox` | Unlock the glovebox | | ❌ Not confirmed | ✅ | t.b.c. | t.b.c. |
+| `lynkco.open_sunroof` | Open the sunroof | | ❌ | ✅ | ❌ | t.b.c. |
+| `lynkco.close_sunroof` | Close the sunroof | | ❌ | ✅ | ❌ | t.b.c. |
+| `lynkco.set_charge_limit` | Set charge limit | `percent` (50-100) | ❌ | ✅ | ✅ | t.b.c. |
+| `lynkco.start_charging` | Start charging | | ⚠️ | ✅ | ✅ | ✅ |
+| `lynkco.stop_charging` | Stop charging | | ❌ | ✅ | ✅ | ✅ |
+| `lynkco.start_conditioning` | Start air conditioning | `temp` (16-28) | ✅ | ✅ | ✅ | t.b.c. |
+| `lynkco.stop_conditioning` | Stop air conditioning | | ✅ | ✅ | ✅ | t.b.c. |
+| `lynkco.start_ventilate` | Open all windows slightly to ventilate | | ⚠️ | ✅ | ✅ | t.b.c. |
+| `lynkco.stop_ventilate` | Close ventilation windows | | ⚠️ | ✅ | ✅ | t.b.c. |
+| `lynkco.start_heaters` | Start heaters | `heaters` (list) | ❌ | ✅ | t.b.c. | t.b.c. |
+| `lynkco.stop_heaters` | Stop heaters | `heaters` (list) | ❌ | ✅ | t.b.c. | t.b.c. |
+| `lynkco.lock_glovebox` | Lock the glovebox | `pin` (4 digits) | ❌ | ✅ | t.b.c. | t.b.c. |
+| `lynkco.unlock_glovebox` | Unlock the glovebox | | ❌ | ✅ | t.b.c. | t.b.c. |
 
 The pre-2025 compatibility check used Home Assistant 2026.9 and integration version `v0.6.1`
 on 8 September 2026. See the complete report in
